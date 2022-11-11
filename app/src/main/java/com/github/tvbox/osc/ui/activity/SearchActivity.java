@@ -36,6 +36,7 @@ import com.github.tvbox.osc.ui.tv.QRCodeGen;
 import com.github.tvbox.osc.ui.tv.widget.SearchKeyboard;
 import com.github.tvbox.osc.util.FastClickCheckUtil;
 import com.github.tvbox.osc.util.HawkConfig;
+import com.github.tvbox.osc.util.LOG;
 import com.github.tvbox.osc.util.SearchHelper;
 import com.github.tvbox.osc.util.js.JSEngine;
 import com.github.tvbox.osc.viewmodel.SourceViewModel;
@@ -95,10 +96,10 @@ public class SearchActivity extends BaseActivity {
     private static Boolean hasKeyBoard;
     @Override
     protected void init() {
-        disableKeyboard(SearchActivity.this);
         initView();
         initViewModel();
         initData();
+        hasKeyBoard = true;
     }
 
     /*
@@ -137,6 +138,13 @@ public class SearchActivity extends BaseActivity {
             }
             pauseRunnable.clear();
             pauseRunnable = null;
+        }
+        if (hasKeyBoard) {
+            tvSearch.requestFocus();
+            tvSearch.requestFocusFromTouch();
+        }else {
+            etSearch.requestFocus();
+            etSearch.requestFocusFromTouch();
         }
     }
 
@@ -186,6 +194,7 @@ public class SearchActivity extends BaseActivity {
                     } catch (Throwable th) {
                         th.printStackTrace();
                     }
+                    hasKeyBoard = false;
                     Bundle bundle = new Bundle();
                     bundle.putString("id", video.id);
                     bundle.putString("sourceKey", video.sourceKey);
@@ -197,6 +206,7 @@ public class SearchActivity extends BaseActivity {
             @Override
             public void onClick(View v) {
                 FastClickCheckUtil.check(v);
+                hasKeyBoard = true;
                 String wd = etSearch.getText().toString().trim();
                 if (!TextUtils.isEmpty(wd)) {
                     search(wd);
@@ -212,15 +222,14 @@ public class SearchActivity extends BaseActivity {
                 etSearch.setText("");
             }
         });
-        etSearch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-//                Toast.makeText(mContext,"点击",Toast.LENGTH_SHORT).show();
-                if(!hasKeyBoard)enableKeyboard(SearchActivity.this);
-                openSystemKeyBoard();//再次尝试拉起键盘
-                SearchActivity.this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
-            }
-        });
+//        etSearch.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                enableKeyboard(SearchActivity.this);
+//                openSystemKeyBoard();//再次尝试拉起键盘
+//                SearchActivity.this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+//            }
+//        });
 
 //        etSearch.setOnFocusChangeListener(tvSearchFocusChangeListener);
         keyboard.setOnSearchKeyListener(new SearchKeyboard.OnSearchKeyListener() {
@@ -375,7 +384,7 @@ public class SearchActivity extends BaseActivity {
     private void refreshQRCode() {
         String address = ControlManager.get().getAddress(false);
         tvAddress.setText(String.format("远程搜索使用手机/电脑扫描下面二维码或者直接浏览器访问地址\n%s", address));
-        ivQRCode.setImageBitmap(QRCodeGen.generateBitmap(address, 300, 300));
+        ivQRCode.setImageBitmap(QRCodeGen.generateBitmap(address + "search.html", 300, 300));
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -505,18 +514,4 @@ public class SearchActivity extends BaseActivity {
         }
         EventBus.getDefault().unregister(this);
     }
-
-//    @Override
-//    public boolean dispatchKeyEvent(KeyEvent event) {
-//        if (event.getAction() == KeyEvent.ACTION_DOWN) {
-//            int keyCode = event.getKeyCode();
-//            if (keyCode == KeyEvent.KEYCODE_MENU) {
-//                if(!hasKeyBoard)enableKeyboard(SearchActivity.this);
-//                openSystemKeyBoard();//再次尝试拉起键盘
-//                getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
-//            }
-//        } else if (event.getAction() == KeyEvent.ACTION_UP) {
-//        }
-//        return super.dispatchKeyEvent(event);
-//    }
 }
